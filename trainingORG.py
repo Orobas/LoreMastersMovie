@@ -39,9 +39,6 @@ with open ("TrainWords", "a") as f:
 	f.write("Word\tValue\n")
 	for key in dict:
 		#print(key + str(dict[key]))
-		if abs(dict[key][0])/dict[key][1] >= .5:
-			#print num
-			if (dict[key][1] < num/20):
 				f.write(key+"\t"+str(dict[key][0])+"\n")
 		#f.write("{}\t{}\n".format(key,str(value)))
 		#print(key + str(value))

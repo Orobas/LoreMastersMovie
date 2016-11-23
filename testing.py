@@ -45,9 +45,9 @@ with open("TestDataset.tsv") as f:
 		#print score
 		#time.sleep(.5)
 		if score < 0: 	
-			scoredict[line[0]] = 1
-		else:
 			scoredict[line[0]] = 0
+		else:
+			scoredict[line[0]] = 1
 try:
 	os.remove("SubmissionData.csv")
 except OSError:

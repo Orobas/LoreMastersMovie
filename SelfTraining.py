@@ -4,6 +4,7 @@ import time, os
 dict = dict()
 scoredict = {}
 nomatchdict = {}
+neglist = []
 true = 0
 false = 0
 nomatch = 0
@@ -13,6 +14,11 @@ with open("SelfTrainingWords.tsv") as train:
 		line = lines.split("\t")
 		dict[line[0]] = line[1]
 
+with open("negative.tsv") as negative:
+	next(negative)
+	for lines in negative:
+		neglist.append(lines)
+		
 with open("TrainDataset.tsv") as f:
 	next(f)
 	for lines in f:
@@ -20,13 +26,25 @@ with open("TrainDataset.tsv") as f:
 		score=0
 		match=False
 		words = line[2].split()
+		neg = False
 		for word in words:
+			wordsplit=word.split(".?!;")
+			if len(wordsplit) > 1:
+				word=wordsplit[0]
 			word = word.translate(None, '\".!></()?@,\\\';:+-*#$`')
 			word = word.lower()
+			if word in neglist:
+				neg = True
+				continue
 			if word in dict:
 				match=True
 				#print dict[word]
 				wordscore = int(dict[word])
+				#print(wordscore)
+				if wordscore==0: wordscore=-1
+				if neg == True: 
+					wordscore = -wordscore
+					neg = False
 				if wordscore < 0:
 					#print("minus")
 					#if wordscore<-10000:
@@ -65,6 +83,8 @@ with open("TrainDataset.tsv") as f:
 			true = true + 1
 		else:
 			false = false + 1
+			#print("Score: " + str(score))
+			#print(line[2])
 
 print("Correct classifications: " + str(true))
 print("False classifications: " + str(false))

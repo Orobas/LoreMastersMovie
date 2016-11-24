@@ -19,8 +19,7 @@ with open("negative.tsv") as negative:
 	for lines in negative:
 		neglist.append(lines)
 		
-#with open("TrainDataset.tsv") as f:
-with open("specifictraindata.tsv") as f:
+with open("TrainDataset.tsv") as f:
 	next(f)
 	for lines in f:
 		line = lines.split("\t",2)
@@ -28,20 +27,16 @@ with open("specifictraindata.tsv") as f:
 		match=False
 		words = line[2].split()
 		neg = False
-		end = False
-		matches = []		
+		matches = []
 		for word in words:
 			wordsplit = re.split(r'[.?!;]+', word)
-			#wordsplit=word.split('.|?|!|/;')
 			if len(wordsplit) > 1:
 				word=wordsplit[0]
-				end = True
+				neg = False
 			word = word.translate(None, '\".!></()?@,\\\';:+-*#$`')
 			word = word.lower()
-			print word + "~"
 			if word in neglist:
 				neg = True
-				print "NEG FOUND!"
 				continue
 			if word in dict:
 				match=True
@@ -79,7 +74,6 @@ with open("specifictraindata.tsv") as f:
 						#score = score + 1
 					score = score + 1
 				#time.sleep(.5)
-			if end == True: neg = False	
 		#print score
 		#time.sleep(.5)
 		if match==False:
@@ -95,12 +89,12 @@ with open("specifictraindata.tsv") as f:
 			true = true + 1
 		else:
 			false = false + 1
-			print("Score: " + str(score))
-			print("Words: ")
-			for word in matches:
-				print word
-			print(line[2])
-			raw_input("Continue...")
+			#print("Score: " + str(score))
+			#print("Words: ")
+			#for word in matches:
+			#	print word
+			#print(line[2])
+			#raw_input("Continue...")
 
 print("Correct classifications: " + str(true))
 print("False classifications: " + str(false))

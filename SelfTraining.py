@@ -1,14 +1,20 @@
 from __future__ import division
-import time, os, re
+import time, os, re, sys
 
 dict = dict()
 scoredict = {}
 nomatchdict = {}
+phraselist = {}
 neglist = []
+mismatchwords = []
 true = 0
 false = 0
 nomatch = 0
-with open("SelfTrainingWords.tsv") as train:
+printout=False
+if len(sys.argv)==2:
+	printout=True
+#with open("SelfTrainingWords.tsv") as train:
+with open("SelfTrainingWordsWeighted.tsv") as train:
 	next(train)
 	for lines in train:
 		line = lines.split("\t")
@@ -17,11 +23,36 @@ with open("SelfTrainingWords.tsv") as train:
 with open("negative.tsv") as negative:
 	next(negative)
 	for lines in negative:
-		neglist.append(lines)
+		lines = lines.split("\n")
+		neglist.append(lines[0])
+
+with open("phrases.tsv") as phrases:
+	next(phrases)
+	for lines in phrases:
+		line = lines.split("\t")
+		phrase = line[1].split(' ')
+		keyword = phrase[0]
+		phraselist[keyword]=""
+		for word in phrase[1:]:
+			word = word.translate(None, "\n")
+			phraselist[keyword] = phraselist[keyword] + word + " "
+		phraselist[keyword] = phraselist[keyword] + line[0]	
+	#print(phraselist)
 		
-#with open("TrainDataset.tsv") as f:
-with open("specifictraindata.tsv") as f:
+def clean( word ):
+	wordsplit = re.split(r'[.?!,;]+', word)
+	if len(wordsplit) > 1:
+		word=wordsplit[0]
+		end = True
+	word = word.translate(None, '\".!></()?@,\\\';:+-*#$`')
+	word = word.lower()
+	return word
+		
+with open("TrainDataset.tsv") as f:
+#with open("specifictraindata.tsv") as f:
 	next(f)
+	curskip = 0
+	skiptil = 0
 	for lines in f:
 		line = lines.split("\t",2)
 		score=0
@@ -29,30 +60,60 @@ with open("specifictraindata.tsv") as f:
 		words = line[2].split()
 		neg = False
 		end = False
+		phrasebool = False
 		matches = []		
-		for word in words:
-			wordsplit = re.split(r'[.?!;]+', word)
+		for index, word in enumerate(words):
+			#print index
+			if skiptil > 0:
+				if curskip < skiptil:
+					curskip = curskip + 1
+					continue
+				else:
+					skiptil = 0
+					continue
+			wordsplit = re.split(r'[.?!,;]+', word)
 			#wordsplit=word.split('.|?|!|/;')
+			phrasebool = False
 			if len(wordsplit) > 1:
 				word=wordsplit[0]
 				end = True
 			word = word.translate(None, '\".!></()?@,\\\';:+-*#$`')
 			word = word.lower()
-			print word + "~"
-			if word in neglist:
+			
+			#print word + "~"
+			if word in phraselist:
+				wordsinphrase = phraselist[word].split()
+				for x in xrange(0,len(wordsinphrase)):
+					neg = False
+					try:
+						nextword = clean(words[index+x+1])
+					except:
+						break
+					if x == len(wordsinphrase)-1:
+						wordscore = int(wordsinphrase[len(wordsinphrase)-1])
+						skiptil = len(wordsinphrase)-1
+						curskip = 1
+						phrasebool = True
+						matches.append("Phrase: " + word + " " + str(wordscore))
+						break
+					if nextword != wordsinphrase[x]: break
+					
+			if word in neglist and phrasebool == False:
 				neg = True
-				print "NEG FOUND!"
+				#print "NEG FOUND!"
 				continue
-			if word in dict:
+			if word in dict or phrasebool == True:
 				match=True
 				#print dict[word]
-				wordscore = int(dict[word])
-				if neg == True:
-					matches.append("Neg " + word + " " + str(wordscore))
-				else:
-					matches.append(word + " " + str(wordscore))
+				if phrasebool == False:
+					wordscore = int(dict[word])
+					if neg == True:
+						matches.append("Neg " + word + " " + str(wordscore))
+						#print("Neg " + word + " " + str(wordscore))
+					else:
+						matches.append(word + " " + str(wordscore))
+						#print(word + " " + str(wordscore))
 				#print(wordscore)
-				if wordscore==0: wordscore=-1
 				if neg == True: 
 					wordscore = -wordscore
 					neg = False
@@ -66,7 +127,7 @@ with open("specifictraindata.tsv") as f:
 						#score = score - 1
 					#if wordscore<-10:
 						#score = score - 1
-					score = score - 1
+					score = score + wordscore
 				else:
 					#print("plus")
 					#if wordscore>10000:
@@ -77,16 +138,18 @@ with open("specifictraindata.tsv") as f:
 						#score = score + 1
 					#if wordscore>10:
 						#score = score + 1
-					score = score + 1
+					score = score + wordscore
 				#time.sleep(.5)
-			if end == True: neg = False	
+			if end == True: 
+				neg = False	
+				end = False
 		#print score
 		#time.sleep(.5)
 		if match==False:
 			#print("No match")
 			nomatchdict[nomatch] = line[1],line[2]
 			nomatch = nomatch + 1
-			continue
+			#continue
 		if score < 0: 	
 			scoredict[line[0]] = 0
 		else:
@@ -95,28 +158,46 @@ with open("specifictraindata.tsv") as f:
 			true = true + 1
 		else:
 			false = false + 1
-			print("Score: " + str(score))
-			print("Words: ")
+			if printout==True: 
+				print("Score: " + str(score))
+				print("Words: ")
 			for word in matches:
-				print word
-			print(line[2])
-			raw_input("Continue...")
+				word = word.split()
+				mismatchwords.append(word[0])
+				if printout == True:	print word
+			if printout==True:
+				print(line[2])
+				raw_input("Continue...")
 
 print("Correct classifications: " + str(true))
 print("False classifications: " + str(false))
 print("No match: " + str(nomatch))
 print("Percentage: {0:.0f}%".format(true/25000*100))		
-try:
-	os.remove("UnmatchedData.tsv")
-except OSError:
-	pass
+#try:
+#	os.remove("UnmatchedData.tsv")
+#except OSError:
+#	pass
 
-with open("UnmatchedData.tsv","w") as write:
-		write.write("sentiment\twords\n")
-		for key in nomatchdict:
-			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1])
+#with open("UnmatchedData.tsv","w") as write:
+#		write.write("sentiment\twords\n")
+#		for key in nomatchdict:
+#			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1])
 			
-			
+with open("CorrectWords.tsv","w") as write:
+		write.write("words")
+		for words in dict:
+			#print words
+			if words in mismatchwords:
+				#print "incorrect word: " + words
+				continue
+			else:
+				write.write(words)
+				
+with open("SubmissionData.csv","w") as write:
+	write.write("document_id,sentiment\n")
+	for key in scoredict:
+		word = key.translate(None, '\"')
+		write.write(word+","+str(scoredict[key])+"\n")			
 			
 			
 			

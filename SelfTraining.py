@@ -1,6 +1,16 @@
 from __future__ import division
 import time, os, re, sys
 
+
+#IDEAS:
+#Get list of all words from unmatched words, count them and show positive/negative count and overall score count
+#Get score count of all words from unmatched words
+#Get accuracy count of all words that are matched, check score of hits, misses and total number of times that words show update
+
+
+
+
+
 dict = dict()
 scoredict = {}
 nomatchdict = {}

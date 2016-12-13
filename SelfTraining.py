@@ -17,14 +17,17 @@ nomatchdict = {}
 phraselist = {}
 neglist = []
 mismatchwords = []
+linesmissed = []
 true = 0
 false = 0
 nomatch = 0
+linenum = -1
 printout=False
 if len(sys.argv)==2:
 	printout=True
 #with open("SelfTrainingWords.tsv") as train:
-with open("SelfTrainingWordsWeighted.tsv") as train:
+#with open("SelfTrainingWordsWeighted.tsv") as train:
+with open("WeightedAverageWords.tsv") as train:
 	next(train)
 	for lines in train:
 		line = lines.split("\t")
@@ -73,6 +76,7 @@ with open("TrainDataset.tsv") as f:
 		phrasebool = False
 		matches = []		
 		for index, word in enumerate(words):
+			linenum=linenum+1;
 			#print index
 			if skiptil > 0:
 				if curskip < skiptil:
@@ -157,27 +161,52 @@ with open("TrainDataset.tsv") as f:
 		#time.sleep(.5)
 		if match==False:
 			#print("No match")
-			nomatchdict[nomatch] = line[1],line[2]
+			linesmissed.append(linenum);
+			nomatchdict[nomatch] = line[0],line[1],line[2]
 			nomatch = nomatch + 1
 			#continue
 		if score < 0: 	
 			scoredict[line[0]] = 0
 		else:
 			scoredict[line[0]] = 1
-		if scoredict[line[0]]==int(line[1]):
-			true = true + 1
+		if int(line[1])==1:
+			if scoredict[line[0]]==1:
+				true = true + 1
+			else:
+				false = false + 1
+				for word in matches:
+					word = word.split()
+					if int(word[len(word)-1]) < 0:
+						mismatchwords.append(word[0])
+				if printout==True:
+					print(line[2])
+					raw_input("Continue...")
 		else:
-			false = false + 1
-			if printout==True: 
-				print("Score: " + str(score))
-				print("Words: ")
-			for word in matches:
-				word = word.split()
-				mismatchwords.append(word[0])
-				if printout == True:	print word
-			if printout==True:
-				print(line[2])
-				raw_input("Continue...")
+			if scoredict[line[0]]==0:
+				true = true + 1
+			else:
+				false = false + 1
+				for word in matches:
+					word = word.split()
+					if int(word[len(word)-1]) > 0:
+						mismatchwords.append(word[0])
+				if printout==True:
+					print(line[2])
+					raw_input("Continue...")
+		#if scoredict[line[0]]==int(line[1]):
+			#true = true + 1
+		#else:
+			#false = false + 1
+			#if printout==True: 
+				#print("Score: " + str(score))
+				#print("Words: ")
+			#for word in matches:
+				#word = word.split()
+				#mismatchwords.append(word[0])
+				#if printout == True:	print word
+			#if printout==True:
+				#print(line[2])
+				#raw_input("Continue...")
 
 print("Correct classifications: " + str(true))
 print("False classifications: " + str(false))
@@ -188,10 +217,10 @@ print("Percentage: {0:.0f}%".format(true/25000*100))
 #except OSError:
 #	pass
 
-#with open("UnmatchedData.tsv","w") as write:
-#		write.write("sentiment\twords\n")
-#		for key in nomatchdict:
-#			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1])
+with open("UnmatchedData.tsv","w") as write:
+		write.write("id\tsentiment\twords\n")
+		for key in nomatchdict:
+			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1] + "\t" + nomatchdict[key][2])
 			
 with open("CorrectWords.tsv","w") as write:
 		write.write("words")
@@ -208,8 +237,6 @@ with open("SubmissionData.csv","w") as write:
 	for key in scoredict:
 		word = key.translate(None, '\"')
 		write.write(word+","+str(scoredict[key])+"\n")			
-			
-			
 			
 			
 #with open("SubmissionData.csv","w") as write:

@@ -11,7 +11,8 @@ true = 0
 false = 0
 nomatch = 0
 #with open("SelfTrainingWords.tsv") as train:
-with open("SelfTrainingWordsWeighted.tsv") as train:
+#with open("SelfTrainingWordsWeighted.tsv") as train:
+with open("WeightedAverageWords.tsv") as train:
 	next(train)
 	for lines in train:
 		line = lines.split("\t")
@@ -151,6 +152,7 @@ with open("TestDataset.tsv") as f:
 			scoredict[line[0]] = 0
 		else:
 			scoredict[line[0]] = 1
+		
 		#if scoredict[line[0]]==int(line[1]):
 			#true = true + 1
 		#else:

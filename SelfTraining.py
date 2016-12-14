@@ -6,7 +6,7 @@ import time, os, re, sys
 #Get list of all words from unmatched words, count them and show positive/negative count and overall score count
 #Get score count of all words from unmatched words
 #Get accuracy count of all words that are matched, check score of hits, misses and total number of times that words show update
-
+#Try with a list of stop words, get from online?
 
 
 
@@ -222,15 +222,15 @@ with open("UnmatchedData.tsv","w") as write:
 		for key in nomatchdict:
 			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1] + "\t" + nomatchdict[key][2])
 			
-with open("CorrectWords.tsv","w") as write:
-		write.write("words")
-		for words in dict:
+#with open("CorrectWords.tsv","w") as write:
+		#write.write("words")
+		#for words in dict:
 			#print words
-			if words in mismatchwords:
+			#if words in mismatchwords:
 				#print "incorrect word: " + words
-				continue
-			else:
-				write.write(words)
+				#continue
+			#else:
+				#write.write(words)
 				
 with open("SubmissionData.csv","w") as write:
 	write.write("document_id,sentiment\n")

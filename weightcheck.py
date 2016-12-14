@@ -16,6 +16,7 @@ scoredict = {}
 nomatchdict = {}
 phraselist = {}
 neglist = []
+stop = []
 mismatchwords = []
 linesmissed = []
 poswords = {}
@@ -36,7 +37,13 @@ with open("SelfTrainingWordsWeighted.tsv") as train:
 	for lines in train:
 		line = lines.split("\t")
 		dict[line[0]] = line[1]
-
+	train.close()
+		
+with open("stopwords.tsv") as stopwords:
+	next(stopwords)
+	for line in stopwords:
+		stop.append(line)
+		
 with open("negative.tsv") as negative:
 	next(negative)
 	for lines in negative:
@@ -65,7 +72,7 @@ def clean( word ):
 	word = word.lower()
 	return word
 		
-with open("TrainDataset.tsv") as f:
+with open("Testoutput.tsv") as f:
 #with open("specifictraindata.tsv") as f:
 	next(f)
 	curskip = 0
@@ -102,7 +109,8 @@ with open("TrainDataset.tsv") as f:
 			
 			#print word + "~"
 			#we have word now
-			if word in dict:
+			#if word in dict:
+			if word not in stop:
 				if linescore==1:
 					if word in poswords:
 						poswords[word]=poswords[word] + 1
@@ -130,27 +138,29 @@ with open("TrainDataset.tsv") as f:
 #except OSError:
 #	pass
 
-with open("WeightedAverageWords.tsv","w") as write:
+with open("WeightedAverageWordscheat.tsv","w") as write:
 		write.write("word\tvalue\n")
 		for key in totalwords:
 			avg = 0
 			if totalwords[key]>0:
-				weight = 1
+				weight = 0
 				avg = poswords[key]/totaluse[key]*100
-				if avg >= 50: weight = 2
-				if avg >= 60: weight = 3
-				if avg >= 70: weight = 4
-				if avg >= 80: weight = 5
-				if avg >= 90: weight = 6
+				if avg >= 50: weight = 0
+				if avg >= 60: weight = 0
+				if avg >= 70: weight = 1
+				if avg >= 80: weight = 2
+				if avg >= 90: weight = 3
+				if avg == 100 and totaluse[key] > 3: weight = 6
 				write.write(key + "\t" + str(weight) + "\t" + str(avg) + "\n")
 			else:
-				weight = -1
+				weight = 0
 				avg = negwords[key]/totaluse[key]*100
-				if avg >= 50: weight = -2
-				if avg >= 40: weight = -3
-				if avg >= 60: weight = -4
-				if avg >= 80: weight = -5
-				if avg >= 90: weight = -6
+				if avg >= 50: weight = 0
+				if avg >= 40: weight = 0
+				if avg >= 60: weight = -1
+				if avg >= 80: weight = -2
+				if avg >= 90: weight = -3
+				if avg == 100 and totaluse[key] > 3: weight = -6
 				write.write(key + "\t" + str(weight) + "\t" + str(avg) + "\n")
 		write.close()
 

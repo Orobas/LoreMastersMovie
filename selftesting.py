@@ -152,7 +152,7 @@ with open("TestDataset.tsv") as f:
 			scoredict[line[0]] = 0
 		else:
 			scoredict[line[0]] = 1
-		
+		#print scoredict
 		#if scoredict[line[0]]==int(line[1]):
 			#true = true + 1
 		#else:
@@ -179,17 +179,7 @@ print("Percentage: {0:.0f}%".format(true/25000*100))
 #		write.write("sentiment\twords\n")
 #		for key in nomatchdict:
 #			write.write(nomatchdict[key][0] + "\t" + nomatchdict[key][1])
-			
-with open("CorrectWords.tsv","w") as write:
-		write.write("words")
-		for words in dict:
-			#print words
-			if words in mismatchwords:
-				#print "incorrect word: " + words
-				continue
-			else:
-				write.write(words)
-				
+	
 with open("SubmissionData.csv","w") as write:
 	write.write("document_id,sentiment\n")
 	for key in scoredict:
